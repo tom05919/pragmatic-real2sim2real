@@ -1,7 +1,7 @@
 """Tests for utils.py."""
 
-from python_starter.structs import Dog
-from python_starter.utils import get_good_dogs_of_breed
+from pr2s2r.structs import Dog
+from pr2s2r.utils import get_good_dogs_of_breed
 
 
 def test_get_good_dogs_of_breed():
