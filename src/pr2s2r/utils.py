@@ -2,7 +2,7 @@
 
 from typing import Set
 
-from python_starter.structs import Dog
+from pr2s2r.structs import Dog
 
 
 def get_good_dogs_of_breed(dogs: Set[Dog], breed: str) -> Set:
