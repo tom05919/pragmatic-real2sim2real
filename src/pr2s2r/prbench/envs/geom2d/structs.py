@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 from prpl_utils.utils import wrap_angle
 from tomsgeoms2d.structs import Geom2D
 
+
 class ZOrder(Enum):
     """Used for collision checking."""
 

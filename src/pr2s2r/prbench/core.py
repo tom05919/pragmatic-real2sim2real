@@ -60,7 +60,7 @@ class ObjectCentricPRBenchEnv(
     """Base class for object-centric PRBench environments."""
 
     # Only RGB rendering is implemented.
-    metadata = {"render_modes": ["rgb_array"]}
+    metadata: dict[str, Any] = {"render_modes": ["rgb_array"]}
 
     def __init__(
         self, config: _ConfigType, render_mode: str | None = "rgb_array"
@@ -213,6 +213,7 @@ class ConstantObjectPRBenchEnv(gymnasium.Env[NDArray[Any], NDArray[Any]]):
         """Create a markdown description of the reference (e.g. papers) for this env."""
 
     def reset(self, *args, **kwargs) -> tuple[NDArray[np.float32], dict]:
+        """Reset the environment."""
         super().reset(*args, **kwargs)  # necessary to reset RNG if seed is given
         if (kwargs.get("options") is not None) and (
             "init_state" in kwargs.get("options", {})
@@ -235,6 +236,7 @@ class ConstantObjectPRBenchEnv(gymnasium.Env[NDArray[Any], NDArray[Any]]):
     def step(
         self, *args, **kwargs
     ) -> tuple[NDArray[np.float32], float, bool, bool, dict]:
+        """Execute one step in the environment."""
         obs, reward, terminated, truncated, done = self._object_centric_env.step(
             *args, **kwargs
         )
@@ -243,6 +245,7 @@ class ConstantObjectPRBenchEnv(gymnasium.Env[NDArray[Any], NDArray[Any]]):
         return vec_obs, reward, terminated, truncated, done
 
     def render(self):
+        """Render the environment."""
         return self._object_centric_env.render()
 
     def get_action_from_gui_input(

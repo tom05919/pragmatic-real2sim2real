@@ -12,7 +12,12 @@ from relational_structs import (
     ObjectCentricState,
 )
 from tomsgeoms2d.structs import Circle, Geom2D, Lobject, Rectangle
-from tomsgeoms2d.utils import line_segment_intersects_rectangle, line_segment_intersects_circle, line_segments_intersect
+from tomsgeoms2d.utils import (
+    geom2ds_intersect as original_geom2ds_intersect,
+    line_segment_intersects_circle,
+    line_segment_intersects_rectangle,
+    line_segments_intersect,
+)
 
 
 from pr2s2r.prbench.envs.geom2d.object_types import (
@@ -20,7 +25,7 @@ from pr2s2r.prbench.envs.geom2d.object_types import (
     CRVRobotType,
     DoubleRectType,
     RectangleType,
-    LObjectType
+    LObjectType,
 )
 
 from pr2s2r.prbench.envs.geom2d.structs import (
@@ -36,12 +41,14 @@ BLACK: tuple[float, float, float] = (0.1, 0.1, 0.1)
 BROWN: tuple[float, float, float] = (0.4, 0.2, 0.1)
 ORANGE: tuple[float, float, float] = (1.0, 165 / 255, 0.0)
 
+
 class RobotActionSpace(Box):
     """A space for robot actions."""
 
     @abc.abstractmethod
     def create_markdown_description(self) -> str:
         """Create a markdown description of this space."""
+
 
 def lobject_intersects_lobject(lobj1: Lobject, lobj2: Lobject) -> bool:
     """Checks if two L-objects intersect."""
@@ -65,10 +72,7 @@ def lobject_intersects_lobject(lobj1: Lobject, lobj2: Lobject) -> bool:
 def lobject_intersects_rectangle(lobj: Lobject, rect: Rectangle) -> bool:
     """Checks if an L-object intersects with a rectangle."""
     # Check if any line segment of the L-object intersects the rectangle
-    if any(
-        line_segment_intersects_rectangle(seg, rect)
-        for seg in lobj.line_segments
-    ):
+    if any(line_segment_intersects_rectangle(seg, rect) for seg in lobj.line_segments):
         return True
     # Case 2: rectangle inside L-object
     if lobj.contains_point(rect.center[0], rect.center[1]):
@@ -83,10 +87,7 @@ def lobject_intersects_rectangle(lobj: Lobject, rect: Rectangle) -> bool:
 def lobject_intersects_circle(lobj: Lobject, circ: Circle) -> bool:
     """Checks if an L-object intersects with a circle."""
     # Check if any line segment of the L-object intersects the circle
-    if any(
-        line_segment_intersects_circle(seg, circ)
-        for seg in lobj.line_segments
-    ):
+    if any(line_segment_intersects_circle(seg, circ) for seg in lobj.line_segments):
         return True
     # Case 2: circle center inside L-object
     if lobj.contains_point(circ.x, circ.y):
@@ -121,9 +122,8 @@ def geom2ds_intersect(geom1: Geom2D, geom2: Geom2D) -> bool:
         return lobject_intersects_circle(geom1, geom2)
     if isinstance(geom1, Circle) and isinstance(geom2, Lobject):
         return circle_intersects_lobject(geom1, geom2)
-    
+
     # For all other cases, use the original function
-    from tomsgeoms2d.utils import geom2ds_intersect as original_geom2ds_intersect
     return original_geom2ds_intersect(geom1, geom2)
 
 
@@ -203,6 +203,7 @@ def crv_robot_to_multibody2d(obj: Object, state: ObjectCentricState) -> MultiBod
 
     return MultiBody2D(obj.name, bodies)
 
+
 def double_rectangle_object_to_part_geom(
     state: ObjectCentricState,
     double_rect_obj: Object,
@@ -218,6 +219,7 @@ def double_rectangle_object_to_part_geom(
     assert isinstance(geom, Rectangle)
     return geom
 
+
 def get_se2_pose(state: ObjectCentricState, obj: Object) -> SE2Pose:
     """Get the SE2Pose of an object in a given state."""
     return SE2Pose(
@@ -225,6 +227,7 @@ def get_se2_pose(state: ObjectCentricState, obj: Object) -> SE2Pose:
         y=state.get(obj, "y"),
         theta=state.get(obj, "theta"),
     )
+
 
 def object_to_multibody2d(
     obj: Object,
@@ -282,20 +285,20 @@ def object_to_multibody2d(
         static_object_cache[obj] = multibody
     return multibody
 
+
 def rectangle_object_to_geom(
     state: ObjectCentricState,
     rect_obj: Object,
     static_object_cache: dict[Object, MultiBody2D],
 ) -> Rectangle:
     """Helper to extract a rectangle for an object."""
-    assert (
-        rect_obj.is_instance(RectangleType)
-    )
+    assert rect_obj.is_instance(RectangleType)
     multibody = object_to_multibody2d(rect_obj, state, static_object_cache)
     assert len(multibody.bodies) == 1
     geom = multibody.bodies[0].geom
     assert isinstance(geom, Rectangle)
     return geom
+
 
 def geom2d_lobject_to_multibody2d(
     obj: Object, state: ObjectCentricState
@@ -325,6 +328,7 @@ def geom2d_lobject_to_multibody2d(
     body = Body2D(geom, z_order, rendering_kwargs, name="hook")
 
     return MultiBody2D(obj.name, [body])
+
 
 def geom2d_double_rectangle_to_multibody2d(
     obj: Object, state: ObjectCentricState
@@ -409,6 +413,7 @@ def geom2d_double_rectangle_to_multibody2d(
 
     return MultiBody2D(obj.name, bodies)
 
+
 def state_2d_has_collision(
     state: ObjectCentricState,
     group1: set[Object],
@@ -449,6 +454,7 @@ def state_2d_has_collision(
                     if geom2ds_intersect(body1.geom, body2.geom):
                         return True
     return False
+
 
 def render_2dstate_on_ax(
     state: ObjectCentricState,

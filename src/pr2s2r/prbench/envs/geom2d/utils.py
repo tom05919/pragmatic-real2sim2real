@@ -3,7 +3,6 @@
 from typing import Any, Iterable
 
 import numpy as np
-import matplotlib.pyplot as plt
 from numpy.typing import NDArray
 from prpl_utils.motion_planning import BiRRT
 from prpl_utils.utils import get_signed_angle_distance, wrap_angle
@@ -27,7 +26,6 @@ from pr2s2r.prbench.envs.geom2d.structs import (
 )
 from pr2s2r.prbench.envs.utils import (
     BLACK,
-    PURPLE,
     crv_robot_to_multibody2d,
     double_rectangle_object_to_part_geom,
     get_se2_pose,
@@ -35,6 +33,7 @@ from pr2s2r.prbench.envs.utils import (
     rectangle_object_to_geom,
     state_2d_has_collision,
 )
+
 
 class CRVRobotActionSpace(RobotActionSpace):
     """An action space for a CRV robot.
@@ -501,7 +500,7 @@ def get_geom2d_crv_robot_action_from_gui_input(
     # Initialize the action.
     low = action_space.low
     high = action_space.high
-    action = np.zeros(action_space.shape, action_space.dtype)
+    action = np.zeros(action_space.shape, dtype=np.float32)
 
     def _rescale(x: float, lb: float, ub: float) -> float:
         """Rescale from [-1, 1] to [lb, ub]."""

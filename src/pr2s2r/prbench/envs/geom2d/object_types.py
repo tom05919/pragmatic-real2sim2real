@@ -1,3 +1,5 @@
+"""Object types for 2D geometry environments."""
+
 from relational_structs import Type
 
 Geom2DRobotEnvTypeFeatures: dict[Type, list[str]] = {}

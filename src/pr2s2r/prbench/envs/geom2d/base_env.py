@@ -17,7 +17,11 @@ from relational_structs import (
 )
 from relational_structs.utils import create_state_from_dict
 
-from pr2s2r.prbench.core import ObjectCentricPRBenchEnv, PRBenchEnvConfig, RobotActionSpace
+from pr2s2r.prbench.core import (
+    ObjectCentricPRBenchEnv,
+    PRBenchEnvConfig,
+    RobotActionSpace,
+)
 from pr2s2r.prbench.envs.geom2d.object_types import (
     CRVRobotType,
     Geom2DRobotEnvTypeFeatures,
