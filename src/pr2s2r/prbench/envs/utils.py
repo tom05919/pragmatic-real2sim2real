@@ -12,22 +12,20 @@ from relational_structs import (
     ObjectCentricState,
 )
 from tomsgeoms2d.structs import Circle, Geom2D, Lobject, Rectangle
+from tomsgeoms2d.utils import geom2ds_intersect as original_geom2ds_intersect
 from tomsgeoms2d.utils import (
-    geom2ds_intersect as original_geom2ds_intersect,
     line_segment_intersects_circle,
     line_segment_intersects_rectangle,
     line_segments_intersect,
 )
 
-
 from pr2s2r.prbench.envs.geom2d.object_types import (
     CircleType,
     CRVRobotType,
     DoubleRectType,
-    RectangleType,
     LObjectType,
+    RectangleType,
 )
-
 from pr2s2r.prbench.envs.geom2d.structs import (
     Body2D,
     MultiBody2D,
