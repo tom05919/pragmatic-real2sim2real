@@ -55,8 +55,8 @@ class CRVRobotActionSpace(RobotActionSpace):
         min_vac: float = 0.0,
         max_vac: float = 1.0,
     ) -> None:
-        low = np.array([min_dx, min_dy, min_dtheta, min_darm, min_vac])
-        high = np.array([max_dx, max_dy, max_dtheta, max_darm, max_vac])
+        low = np.array([min_dx, min_dy, min_dtheta, min_darm, min_vac], dtype=np.float32)
+        high = np.array([max_dx, max_dy, max_dtheta, max_darm, max_vac], dtype=np.float32)
         super().__init__(low, high)
 
     def create_markdown_description(self) -> str:

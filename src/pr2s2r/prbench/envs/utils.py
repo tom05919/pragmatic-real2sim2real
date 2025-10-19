@@ -411,6 +411,15 @@ def geom2d_double_rectangle_to_multibody2d(
 
     return MultiBody2D(obj.name, bodies)
 
+def sample_se2_pose(
+    bounds: tuple[SE2Pose, SE2Pose], rng: np.random.Generator
+) -> SE2Pose:
+    """Sample a SE2Pose uniformly between the bounds."""
+    lb, ub = bounds
+    x = rng.uniform(lb.x, ub.x)
+    y = rng.uniform(lb.y, ub.y)
+    theta = rng.uniform(lb.theta, ub.theta)
+    return SE2Pose(x, y, theta)
 
 def state_2d_has_collision(
     state: ObjectCentricState,
