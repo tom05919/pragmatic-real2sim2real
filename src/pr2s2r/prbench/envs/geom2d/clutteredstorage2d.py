@@ -17,7 +17,6 @@ from pr2s2r.prbench.envs.geom2d.object_types import (
     DoubleRectType,
     Geom2DRobotEnvTypeFeatures,
     RectangleType,
-    LObjectType,
 )
 from pr2s2r.prbench.envs.geom2d.structs import SE2Pose, ZOrder
 from pr2s2r.prbench.envs.geom2d.utils import (
@@ -25,7 +24,12 @@ from pr2s2r.prbench.envs.geom2d.utils import (
     create_walls_from_world_boundaries,
     is_inside_shelf,
 )
-from pr2s2r.prbench.envs.utils import BLACK, PURPLE, sample_se2_pose, state_2d_has_collision
+from pr2s2r.prbench.envs.utils import (
+    BLACK,
+    PURPLE,
+    sample_se2_pose,
+    state_2d_has_collision,
+)
 
 # NOTE: unlike some other environments, there are multiple target blocks here.
 TargetBlockType = Type("target_block", parent=RectangleType)
@@ -181,7 +185,9 @@ class ObjectCentricClutteredStorage2DEnv(
             size=self._num_init_shelf_blocks,
         ).tolist()
         state = self._create_initial_state(
-            robot_pose, shelf_pose, shelf_target_block_rotations
+            robot_pose,
+            shelf_pose,
+            shelf_target_block_rotations,  # type: ignore[arg-type]
         )
         robot = state.get_objects(CRVRobotType)[0]
         full_state = state.copy()
@@ -204,7 +210,7 @@ class ObjectCentricClutteredStorage2DEnv(
                 state = self._create_initial_state(
                     robot_pose,
                     shelf_pose,
-                    shelf_target_block_rotations,
+                    shelf_target_block_rotations,  # type: ignore[arg-type]
                     target_block_outside_poses=target_block_outside_poses + [pose],
                 )
                 obj_name_to_obj = {o.name: o for o in state}

@@ -27,7 +27,9 @@ def register_all_environments() -> None:
     for num_block in num_blocks:
         _register(
             id=f"prbench/ClutteredStorage2D-b{num_block}-v0",
-            entry_point="pr2s2r.prbench.envs.geom2d.clutteredstorage2d:ClutteredStorage2DEnv",
+            entry_point=(
+                "pr2s2r.prbench.envs.geom2d.clutteredstorage2d:" "ClutteredStorage2DEnv"
+            ),
             kwargs={"num_blocks": num_block},
         )
 
