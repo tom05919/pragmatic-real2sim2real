@@ -23,7 +23,7 @@ def register_all_environments() -> None:
     # ******* Geom2D Environments *******
 
     # ClutteredStorage2D environment with different numbers of blocks.
-    num_blocks = [1, 3, 7, 15]
+    num_blocks = [1]
     for num_block in num_blocks:
         _register(
             id=f"prbench/ClutteredStorage2D-b{num_block}-v0",

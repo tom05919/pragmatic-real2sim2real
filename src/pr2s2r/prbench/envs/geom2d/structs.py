@@ -1,4 +1,4 @@
-"""Data structs"""
+"""Data structs."""
 
 from __future__ import annotations
 
