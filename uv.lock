@@ -1188,11 +1188,13 @@ name = "python-starter"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "dill" },
     { name = "gymnasium" },
     { name = "matplotlib" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "prpl-utils" },
+    { name = "pytest" },
     { name = "relational-structs" },
     { name = "tomsgeoms2d" },
 ]
@@ -1211,6 +1213,7 @@ develop = [
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'develop'" },
+    { name = "dill" },
     { name = "docformatter", marker = "extra == 'develop'" },
     { name = "gymnasium" },
     { name = "isort", marker = "extra == 'develop'" },
@@ -1219,6 +1222,7 @@ requires-dist = [
     { name = "numpy" },
     { name = "prpl-utils", git = "https://github.com/Princeton-Robot-Planning-and-Learning/prpl-mono.git?subdirectory=prpl-utils&rev=2fb2da808c5c3224dd9acb2826916102592926ce" },
     { name = "pylint", marker = "extra == 'develop'", specifier = ">=2.14.5" },
+    { name = "pytest" },
     { name = "pytest", marker = "extra == 'develop'", specifier = ">=7.2.2" },
     { name = "pytest-pylint", marker = "extra == 'develop'", specifier = ">=0.18.0" },
     { name = "relational-structs", git = "https://github.com/Princeton-Robot-Planning-and-Learning/prpl-mono.git?subdirectory=relational-structs&rev=85410f5fccf3814e66fa3b193b56c82c4d5c0d0b" },
