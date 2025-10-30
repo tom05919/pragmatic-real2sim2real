@@ -113,11 +113,11 @@ def _run_single_episode_evaluation(
     seed = sample_seed_from_rng(rng)
     obs, info = env.reset(seed=seed)
     
-    # Capture and save the first frame
-    first_frame = env.render()  # type: ignore
-    first_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_first_frame.png")
-    plt.imsave(first_frame_path, first_frame)  # type: ignore
-    logging.info(f"Saved first frame to {first_frame_path}")
+    # # Capture and save the first frame
+    # first_frame = env.render()  # type: ignore
+    # first_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_first_frame.png")
+    # plt.imsave(first_frame_path, first_frame)  # type: ignore
+    # logging.info(f"Saved first frame to {first_frame_path}")
     
     planning_time = 0.0  # measure the time taken by the approach only
     planning_failed = False
@@ -160,11 +160,11 @@ def _run_single_episode_evaluation(
             break
         steps += 1
     
-    # Capture and save the last frame
-    last_frame = env.render()  # type: ignore
-    last_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_last_frame.png")
-    plt.imsave(last_frame_path, last_frame)  # type: ignore
-    logging.info(f"Saved last frame to {last_frame_path}")
+    # # Capture and save the last frame
+    # last_frame = env.render()  # type: ignore
+    # last_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_last_frame.png")
+    # plt.imsave(last_frame_path, last_frame)  # type: ignore
+    # logging.info(f"Saved last frame to {last_frame_path}")
     
     logging.info(f"Success result: {success}")
     return {"success": success, "steps": steps, "planning_time": planning_time}
