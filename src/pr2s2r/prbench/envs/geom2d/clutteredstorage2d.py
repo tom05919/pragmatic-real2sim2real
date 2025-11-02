@@ -16,6 +16,7 @@ from pr2s2r.prbench.envs.geom2d.object_types import (
     CRVRobotType,
     DoubleRectType,
     Geom2DRobotEnvTypeFeatures,
+    LObjectType,
     RectangleType,
 )
 from pr2s2r.prbench.envs.geom2d.structs import SE2Pose, ZOrder
@@ -69,6 +70,9 @@ class ClutteredStorage2DEnvConfig(Geom2DRobotEnvConfig, metaclass=FinalConfigMet
     shelf_width_pad: float = shelf_height / 10
     shelf_y: float = world_max_y - shelf_height
 
+    # LObject blocker hyperparameters:
+    occupied_percentage: float = 0.8
+
     # Robot hyperparameters.
     robot_base_radius: float = 0.2
     # NOTE: extra long robot arm to make it easier to reach into shelf.
@@ -99,10 +103,7 @@ class ClutteredStorage2DEnvConfig(Geom2DRobotEnvConfig, metaclass=FinalConfigMet
     target_block_out_of_shelf_pose_bounds: tuple[SE2Pose, SE2Pose] = (
         robot_init_pose_bounds
     )
-    target_block_shape: tuple[float, float] = (
-        2 * robot_gripper_height,
-        2 * robot_gripper_width,
-    )
+    target_block_shape: tuple[float, float] = (0.125, 0.3)
 
     # For initial state sampling.
     max_init_sampling_attempts: int = 10_000
@@ -113,12 +114,7 @@ class ClutteredStorage2DEnvConfig(Geom2DRobotEnvConfig, metaclass=FinalConfigMet
 
     def get_shelf_width(self, num_init_shelf_blocks: int) -> float:
         """Calculate the shelf width as a function of number of blocks."""
-        if num_init_shelf_blocks == 0:
-            shelf_width = max(self.target_block_shape) + self.shelf_width_pad
-        else:
-            shelf_width = (
-                max(self.target_block_shape) + self.shelf_width_pad
-            ) * num_init_shelf_blocks
+        shelf_width = 0.5
         assert shelf_width <= self.world_max_x - self.world_min_x
         # Make sure that vertical stacking is possible.
         assert shelf_width > (num_init_shelf_blocks + 1) * self.target_block_shape[1]
@@ -301,6 +297,25 @@ class ObjectCentricClutteredStorage2DEnv(
             "z_order": ZOrder.ALL.value,
         }
 
+        # Create L-shaped blocker inside the shelf opening.
+        shelf_blocker = Object("shelf_blocker", LObjectType)
+        blocker_x = shelf_pose.x + shelf_width
+        # Place at the back of the shelf (minus the L's width to keep it inside)
+        blocker_y = shelf_pose.y + self.config.shelf_height
+        init_state_dict[shelf_blocker] = {
+            "x": blocker_x,
+            "y": blocker_y,
+            "theta": 0.0,  # No rotation
+            "width": 0.1,  # Thickness of L-shape arms
+            "length_side1": shelf_width * self.config.occupied_percentage,
+            "length_side2": self.config.shelf_height * self.config.occupied_percentage,
+            "static": True,
+            "color_r": 0.6,
+            "color_g": 0.6,
+            "color_b": 0.6,
+            "z_order": ZOrder.SURFACE.value,
+        }
+
         # Create the target blocks that are initially in the shelf. Evenly space
         # them horizontally and apply rotations.
         block_num = 0
@@ -384,14 +399,14 @@ class ClutteredStorage2DEnv(ConstantObjectPRBenchEnv):
     def _get_constant_object_names(
         self, exemplar_state: ObjectCentricState
     ) -> list[str]:
-        constant_objects = ["robot", "shelf"]
+        constant_objects = ["robot", "shelf", "shelf_blocker"]
         for obj in sorted(exemplar_state):
             if obj.name.startswith("block"):
                 constant_objects.append(obj.name)
         return constant_objects
 
     def _create_env_markdown_description(self) -> str:
-        num_blocks = len(self._constant_objects) - 2
+        num_blocks = len(self._constant_objects) - 3  # robot, shelf, shelf_blocker
         # pylint: disable=line-too-long
         return f"""A 2D environment where the goal is to put all blocks inside a shelf.
 
