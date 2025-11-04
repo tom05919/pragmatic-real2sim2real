@@ -20,13 +20,13 @@ import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pr2s2r.prbench as prbench
 from gymnasium.core import Env
 from gymnasium.wrappers import RecordVideo
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 from prpl_utils.utils import sample_seed_from_rng, timer
 
+import pr2s2r.prbench as prbench
 from pr2s2r.prbench_bilevel_planning.agent import AgentFailure, BilevelPlanningAgent
 from pr2s2r.prbench_bilevel_planning.env_models import create_bilevel_planning_models
 
@@ -112,13 +112,15 @@ def _run_single_episode_evaluation(
     success = False
     seed = sample_seed_from_rng(rng)
     obs, info = env.reset(seed=seed)
-    
+
     # # Capture and save the first frame
     # first_frame = env.render()  # type: ignore
-    # first_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_first_frame.png")
+    # first_frame_path = os.path.join(
+    #     output_dir, f"episode_{eval_episode}_first_frame.png"
+    # )
     # plt.imsave(first_frame_path, first_frame)  # type: ignore
     # logging.info(f"Saved first frame to {first_frame_path}")
-    
+
     planning_time = 0.0  # measure the time taken by the approach only
     planning_failed = False
     with timer() as result:
@@ -131,7 +133,9 @@ def _run_single_episode_evaluation(
     if planning_failed:
         # Save last frame even on failure
         last_frame = env.render()  # type: ignore
-        last_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_last_frame.png")
+        last_frame_path = os.path.join(
+            output_dir, f"episode_{eval_episode}_last_frame.png"
+        )
         plt.imsave(last_frame_path, last_frame)  # type: ignore
         return {"success": False, "steps": steps, "planning_time": planning_time}
     for _ in range(max_eval_steps):
@@ -146,7 +150,9 @@ def _run_single_episode_evaluation(
         if step_failed:
             # Save last frame on step failure
             last_frame = env.render()  # type: ignore
-            last_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_last_frame.png")
+            last_frame_path = os.path.join(
+                output_dir, f"episode_{eval_episode}_last_frame.png"
+            )
             plt.imsave(last_frame_path, last_frame)  # type: ignore
             return {"success": False, "steps": steps, "planning_time": planning_time}
         obs, rew, done, truncated, info = env.step(action)

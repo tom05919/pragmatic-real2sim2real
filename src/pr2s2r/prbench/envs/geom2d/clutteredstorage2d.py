@@ -319,7 +319,7 @@ class ObjectCentricClutteredStorage2DEnv(
         # Create blocker inside the shelf opening at the back (right side).
         blocker_width = shelf_width * self.config.occupied_percentage
         blocker_height = self.config.shelf_height * self.config.occupied_percentage
-        
+
         if self.config.blocker_type == "lobject":
             # Create L-shaped blocker
             shelf_blocker = Object("shelf_blocker", LObjectType)

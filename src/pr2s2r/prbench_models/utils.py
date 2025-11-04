@@ -7,12 +7,13 @@ import gymnasium
 import numpy as np
 from bilevel_planning.structs import LiftedParameterizedController
 from numpy.typing import NDArray
-from pr2s2r.prbench.core import ObjectCentricPRBenchEnv
 from prpl_utils.spaces import FunctionalSpace
 from relational_structs import (
     Object,
     ObjectCentricState,
 )
+
+from pr2s2r.prbench.core import ObjectCentricPRBenchEnv
 
 # Use object-centric states, as in PRBench.
 _ObsType = TypeVar("_ObsType", bound=ObjectCentricState)

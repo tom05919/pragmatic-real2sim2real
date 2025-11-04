@@ -6,10 +6,11 @@ from typing import Optional, Sequence, Union
 import numpy as np
 from bilevel_planning.structs import GroundParameterizedController
 from numpy.typing import NDArray
+from relational_structs import Object, ObjectCentricState
+
 from pr2s2r.prbench.envs.geom2d.object_types import CRVRobotType
 from pr2s2r.prbench.envs.geom2d.structs import SE2Pose
 from pr2s2r.prbench.envs.geom2d.utils import CRVRobotActionSpace
-from relational_structs import Object, ObjectCentricState
 
 
 class Geom2dRobotController(GroundParameterizedController, abc.ABC):

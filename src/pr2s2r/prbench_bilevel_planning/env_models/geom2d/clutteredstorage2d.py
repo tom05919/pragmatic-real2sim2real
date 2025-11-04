@@ -9,6 +9,16 @@ from bilevel_planning.structs import (
 )
 from gymnasium.spaces import Space
 from numpy.typing import NDArray
+from relational_structs import (
+    GroundAtom,
+    LiftedAtom,
+    LiftedOperator,
+    ObjectCentricState,
+    Predicate,
+    Variable,
+)
+from relational_structs.spaces import ObjectCentricBoxSpace, ObjectCentricStateSpace
+
 from pr2s2r.prbench.envs.geom2d.clutteredstorage2d import (
     ObjectCentricClutteredStorage2DEnv,
     ShelfType,
@@ -23,15 +33,6 @@ from pr2s2r.prbench.envs.geom2d.utils import (
 from pr2s2r.prbench_models.geom2d.envs.clutteredstorage2d.parameterized_skills import (
     create_lifted_controllers,
 )
-from relational_structs import (
-    GroundAtom,
-    LiftedAtom,
-    LiftedOperator,
-    ObjectCentricState,
-    Predicate,
-    Variable,
-)
-from relational_structs.spaces import ObjectCentricBoxSpace, ObjectCentricStateSpace
 
 
 def create_bilevel_planning_models(

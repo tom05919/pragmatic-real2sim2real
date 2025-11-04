@@ -8,6 +8,12 @@ from bilevel_planning.trajectory_samplers.trajectory_sampler import (
     TrajectorySamplingFailure,
 )
 from gymnasium.spaces import Box
+from relational_structs import (
+    Object,
+    ObjectCentricState,
+    Variable,
+)
+
 from pr2s2r.prbench.envs.geom2d.clutteredstorage2d import (
     ClutteredStorage2DEnvConfig,
     ShelfType,
@@ -23,12 +29,6 @@ from pr2s2r.prbench.envs.geom2d.utils import (
     snap_suctioned_objects,
     state_2d_has_collision,
 )
-from relational_structs import (
-    Object,
-    ObjectCentricState,
-    Variable,
-)
-
 from pr2s2r.prbench_models.geom2d.utils import Geom2dRobotController
 
 
