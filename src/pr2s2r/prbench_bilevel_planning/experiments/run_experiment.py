@@ -69,7 +69,7 @@ def _main(cfg: DictConfig) -> None:
     rng = np.random.default_rng(cfg.seed)
     metrics: list[dict[str, float]] = []
     current_dir = HydraConfig.get().runtime.output_dir
-    for eval_episode in range(cfg.num_eval_episodes):
+    for eval_episode in range(50):
         logging.info(f"Starting evaluation episode {eval_episode}")
         episode_metrics = _run_single_episode_evaluation(
             agent,

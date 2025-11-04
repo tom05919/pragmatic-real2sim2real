@@ -162,3 +162,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Experiment logs
+src/pr2s2r/prbench_bilevel_planning/experiments/logs/
