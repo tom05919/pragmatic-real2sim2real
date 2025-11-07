@@ -26,7 +26,7 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 from prpl_utils.utils import sample_seed_from_rng, timer
 
-import pr2s2r.prbench as prbench
+from pr2s2r import prbench
 from pr2s2r.prbench_bilevel_planning.agent import AgentFailure, BilevelPlanningAgent
 from pr2s2r.prbench_bilevel_planning.env_models import create_bilevel_planning_models
 
@@ -165,16 +165,19 @@ def _run_single_episode_evaluation(
             success = True
             break
         steps += 1
-    
+
     # # Capture and save the last frame
     # last_frame = env.render()  # type: ignore
-    # last_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_last_frame.png")
+    # last_frame_path = os.path.join(
+    #     output_dir, f"episode_{eval_episode}_last_frame.png"
+    # )
     # plt.imsave(last_frame_path, last_frame)  # type: ignore
     # logging.info(f"Saved last frame to {last_frame_path}")
-    
+
     logging.info(f"Success result: {success}")
     return {"success": success, "steps": steps, "planning_time": planning_time}
 
 
 if __name__ == "__main__":
     _main()  # pylint: disable=no-value-for-parameter
+

@@ -120,3 +120,4 @@ class BilevelPlanningAgent(Agent[_O, _U]):
             raise AgentFailure("No plan found")
 
         return plan.actions
+
