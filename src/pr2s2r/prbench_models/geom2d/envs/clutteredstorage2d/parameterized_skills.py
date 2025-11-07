@@ -529,4 +529,3 @@ def create_lifted_controllers(
         "place_block_not_on_shelf": place_block_not_on_shelf_controller,
         "place_block_on_shelf": place_block_on_shelf_controller,
     }
-
