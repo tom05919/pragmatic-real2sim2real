@@ -1,6 +1,6 @@
 """Cluttered environment where blocks must be stored on a shelf."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 from relational_structs import Object, ObjectCentricState, Type
@@ -70,8 +70,9 @@ class ClutteredStorage2DEnvConfig(Geom2DRobotEnvConfig, metaclass=FinalConfigMet
     shelf_width_pad: float = shelf_height / 10
     shelf_y: float = world_max_y - shelf_height
 
-    # LObject blocker hyperparameters:
-    occupied_percentage: float = 0.8
+    # Blocker hyperparameters:
+    occupied_percentage: float = 0.4
+    blocker_type: str = "rectangle"  # "rectangle" or "lobject"
 
     # Robot hyperparameters.
     robot_base_radius: float = 0.2
@@ -159,8 +160,26 @@ class ObjectCentricClutteredStorage2DEnv(
         self,
         num_blocks: int = 3,
         config: ClutteredStorage2DEnvConfig = ClutteredStorage2DEnvConfig(),
+        target_block_shape: tuple[float, float] | None = None,
+        occupied_percentage: float | None = None,
+        blocker_type: str | None = None,
         **kwargs,
     ) -> None:
+        # Create custom config if parameters are provided
+        if (
+            target_block_shape is not None
+            or occupied_percentage is not None
+            or blocker_type is not None
+        ):
+            config_updates: dict = {}
+            if target_block_shape is not None:
+                config_updates["target_block_shape"] = target_block_shape
+            if occupied_percentage is not None:
+                config_updates["occupied_percentage"] = occupied_percentage
+            if blocker_type is not None:
+                config_updates["blocker_type"] = blocker_type
+            config = replace(config, **config_updates)  # type: ignore[misc]
+
         super().__init__(config, **kwargs)
         assert num_blocks % 2 == 1, "Number of blocks must be odd"
         self._num_init_shelf_blocks = num_blocks // 2
@@ -297,24 +316,45 @@ class ObjectCentricClutteredStorage2DEnv(
             "z_order": ZOrder.ALL.value,
         }
 
-        # Create L-shaped blocker inside the shelf opening.
-        shelf_blocker = Object("shelf_blocker", LObjectType)
-        blocker_x = shelf_pose.x + shelf_width
-        # Place at the back of the shelf (minus the L's width to keep it inside)
-        blocker_y = shelf_pose.y + self.config.shelf_height
-        init_state_dict[shelf_blocker] = {
-            "x": blocker_x,
-            "y": blocker_y,
-            "theta": 0.0,  # No rotation
-            "width": 0.1,  # Thickness of L-shape arms
-            "length_side1": shelf_width * self.config.occupied_percentage,
-            "length_side2": self.config.shelf_height * self.config.occupied_percentage,
-            "static": True,
-            "color_r": 0.6,
-            "color_g": 0.6,
-            "color_b": 0.6,
-            "z_order": ZOrder.SURFACE.value,
-        }
+        # Create blocker inside the shelf opening at the back (right side).
+        blocker_width = shelf_width * self.config.occupied_percentage
+        blocker_height = self.config.shelf_height * self.config.occupied_percentage
+
+        if self.config.blocker_type == "lobject":
+            # Create L-shaped blocker
+            shelf_blocker = Object("shelf_blocker", LObjectType)
+            blocker_x = shelf_pose.x + shelf_width
+            blocker_y = shelf_pose.y + self.config.shelf_height
+            init_state_dict[shelf_blocker] = {
+                "x": blocker_x,
+                "y": blocker_y,
+                "theta": 0.0,  # No rotation
+                "width": 0.1,  # Thickness of L-shape arms
+                "length_side1": blocker_width,
+                "length_side2": blocker_height,
+                "static": True,
+                "color_r": 0.6,
+                "color_g": 0.6,
+                "color_b": 0.6,
+                "z_order": ZOrder.SURFACE.value,
+            }
+        else:  # Default to rectangle
+            # Create rectangular blocker
+            shelf_blocker = Object("shelf_blocker", RectangleType)
+            blocker_x = shelf_pose.x + shelf_width - blocker_width
+            blocker_y = shelf_pose.y + self.config.shelf_height - blocker_height
+            init_state_dict[shelf_blocker] = {
+                "x": blocker_x,
+                "y": blocker_y,
+                "theta": 0.0,  # No rotation
+                "width": blocker_width,
+                "height": blocker_height,
+                "static": True,
+                "color_r": 0.6,
+                "color_g": 0.6,
+                "color_b": 0.6,
+                "z_order": ZOrder.SURFACE.value,
+            }
 
         # Create the target blocks that are initially in the shelf. Evenly space
         # them horizontally and apply rotations.
