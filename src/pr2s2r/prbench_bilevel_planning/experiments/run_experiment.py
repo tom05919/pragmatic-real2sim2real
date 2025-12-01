@@ -29,12 +29,47 @@ from prpl_utils.utils import sample_seed_from_rng, timer
 from pr2s2r import prbench
 from pr2s2r.prbench_bilevel_planning.agent import AgentFailure, BilevelPlanningAgent
 from pr2s2r.prbench_bilevel_planning.env_models import create_bilevel_planning_models
+from pr2s2r.real_to_sim.bounding_box import measure_object
 
 
 @hydra.main(version_base=None, config_name="config", config_path="conf/")
 def _main(cfg: DictConfig) -> None:
 
     logging.info(f"Running seed={cfg.seed}, env={cfg.env.env_name}")
+
+    if "real_image_path" in cfg and cfg.real_image_path is not None:
+        logging.info(f"Detecting object from real image: {cfg.real_image_path}")
+        real_image_path = cfg.real_image_path
+        
+        if not os.path.isabs(real_image_path):
+             project_root = Path(__file__).resolve().parents[4]
+             real_image_path = str(project_root / real_image_path)
+
+        current_dir = HydraConfig.get().runtime.output_dir
+        detection_output_path = os.path.join(current_dir, "detected_object.png")
+        try:
+            measurement = measure_object(real_image_path, detection_output_path)
+            
+            # Scale dimensions
+            scale_factor = 1500.0
+            blocker_width = measurement.total_width / scale_factor
+            blocker_height = measurement.total_height / scale_factor
+            
+            logging.info(f"Detected dimensions: {measurement.total_width:.2f}x{measurement.total_height:.2f}")
+            logging.info(f"Scaled dimensions: {blocker_width:.4f}x{blocker_height:.4f}")
+            
+            # Update config
+            if "make_kwargs" not in cfg.env:
+                OmegaConf.update(cfg.env, "make_kwargs", {}, force_add=True)
+            
+            OmegaConf.set_struct(cfg.env.make_kwargs, False)
+            cfg.env.make_kwargs["blocker_width"] = blocker_width
+            cfg.env.make_kwargs["blocker_height"] = blocker_height
+            OmegaConf.set_struct(cfg.env.make_kwargs, True)
+            
+        except Exception as e:
+            logging.error(f"Failed to process real image: {e}")
+            raise e
 
     # Create the environment.
     prbench.register_all_environments()
@@ -113,13 +148,13 @@ def _run_single_episode_evaluation(
     seed = sample_seed_from_rng(rng)
     obs, info = env.reset(seed=seed)
 
-    # # Capture and save the first frame
-    # first_frame = env.render()  # type: ignore
-    # first_frame_path = os.path.join(
-    #     output_dir, f"episode_{eval_episode}_first_frame.png"
-    # )
-    # plt.imsave(first_frame_path, first_frame)  # type: ignore
-    # logging.info(f"Saved first frame to {first_frame_path}")
+    # Capture and save the first frame
+    first_frame = env.render()  # type: ignore
+    first_frame_path = os.path.join(
+        output_dir, f"episode_{eval_episode}_first_frame.png"
+    )
+    plt.imsave(first_frame_path, first_frame)  # type: ignore
+    logging.info(f"Saved first frame to {first_frame_path}")
 
     planning_time = 0.0  # measure the time taken by the approach only
     planning_failed = False
@@ -166,13 +201,13 @@ def _run_single_episode_evaluation(
             break
         steps += 1
 
-    # # Capture and save the last frame
-    # last_frame = env.render()  # type: ignore
-    # last_frame_path = os.path.join(
-    #     output_dir, f"episode_{eval_episode}_last_frame.png"
-    # )
-    # plt.imsave(last_frame_path, last_frame)  # type: ignore
-    # logging.info(f"Saved last frame to {last_frame_path}")
+    # Capture and save the last frame
+    last_frame = env.render()  # type: ignore
+    last_frame_path = os.path.join(
+        output_dir, f"episode_{eval_episode}_last_frame.png"
+    )
+    plt.imsave(last_frame_path, last_frame)  # type: ignore
+    logging.info(f"Saved last frame to {last_frame_path}")
 
     logging.info(f"Success result: {success}")
     return {"success": success, "steps": steps, "planning_time": planning_time}

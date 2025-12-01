@@ -16,9 +16,13 @@ dependencies = [
    "matplotlib",
    "numpy",
    "pandas",
+   "python-dotenv",
+   "scikit-image",
    "relational-structs@git+https://github.com/Princeton-Robot-Planning-and-Learning/prpl-mono.git@85410f5fccf3814e66fa3b193b56c82c4d5c0d0b#subdirectory=relational-structs",
    "tomsgeoms2d@git+https://github.com/Princeton-Robot-Planning-and-Learning/prpl-mono.git@a6549280d769d12c13a3a82ca52b3f1b3ae4a5af#subdirectory=toms-geoms-2d",
    "prpl-utils@git+https://github.com/Princeton-Robot-Planning-and-Learning/prpl-mono.git@2fb2da808c5c3224dd9acb2826916102592926ce#subdirectory=prpl-utils",
+   "prpl-perception-utils@git+https://github.com/Princeton-Robot-Planning-and-Learning/prpl-mono.git@5094ea1e9371657a0910a46fd7046ca5ab3e97ab#subdirectory=prpl-perception-utils",
+   "prpl-llm-utils@git+https://github.com/Princeton-Robot-Planning-and-Learning/prpl-mono.git@5094ea1e9371657a0910a46fd7046ca5ab3e97ab#subdirectory=prpl-llm-utils",
    "pytest",
 ]
 
@@ -72,6 +76,8 @@ module = [
     "pandas.*",
     "relational_structs.*",
     "prpl_utils.*",
+    "prpl_perception_utils.*",
+    "prpl_llm_utils.*",
     "tomsgeoms2d.*",
 ]
 ignore_missing_imports = true
