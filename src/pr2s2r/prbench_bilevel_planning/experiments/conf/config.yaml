@@ -17,7 +17,7 @@ max_abstract_plans: 10
 samples_per_step: 3
 max_skill_horizon: 100
 heuristic_name: "hff"
-planning_timeout: 60  # seconds
+planning_timeout: 30  # seconds
 
 # Environment.
 defaults:

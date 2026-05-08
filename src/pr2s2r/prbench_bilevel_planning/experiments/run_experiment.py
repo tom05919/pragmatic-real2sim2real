@@ -40,33 +40,35 @@ def _main(cfg: DictConfig) -> None:
     if "real_image_path" in cfg and cfg.real_image_path is not None:
         logging.info(f"Detecting object from real image: {cfg.real_image_path}")
         real_image_path = cfg.real_image_path
-        
+
         if not os.path.isabs(real_image_path):
-             project_root = Path(__file__).resolve().parents[4]
-             real_image_path = str(project_root / real_image_path)
+            project_root = Path(__file__).resolve().parents[4]
+            real_image_path = str(project_root / real_image_path)
 
         current_dir = HydraConfig.get().runtime.output_dir
         detection_output_path = os.path.join(current_dir, "detected_object.png")
         try:
             measurement = measure_object(real_image_path, detection_output_path)
-            
+
             # Scale dimensions
             scale_factor = 1500.0
             blocker_width = measurement.total_width / scale_factor
             blocker_height = measurement.total_height / scale_factor
-            
-            logging.info(f"Detected dimensions: {measurement.total_width:.2f}x{measurement.total_height:.2f}")
+
+            logging.info(
+                f"Detected dimensions: {measurement.total_width:.2f}x{measurement.total_height:.2f}"
+            )
             logging.info(f"Scaled dimensions: {blocker_width:.4f}x{blocker_height:.4f}")
-            
+
             # Update config
             if "make_kwargs" not in cfg.env:
                 OmegaConf.update(cfg.env, "make_kwargs", {}, force_add=True)
-            
+
             OmegaConf.set_struct(cfg.env.make_kwargs, False)
             cfg.env.make_kwargs["blocker_width"] = blocker_width
             cfg.env.make_kwargs["blocker_height"] = blocker_height
             OmegaConf.set_struct(cfg.env.make_kwargs, True)
-            
+
         except Exception as e:
             logging.error(f"Failed to process real image: {e}")
             raise e
@@ -104,7 +106,7 @@ def _main(cfg: DictConfig) -> None:
     rng = np.random.default_rng(cfg.seed)
     metrics: list[dict[str, float]] = []
     current_dir = HydraConfig.get().runtime.output_dir
-    for eval_episode in range(50):
+    for eval_episode in range(25):
         logging.info(f"Starting evaluation episode {eval_episode}")
         episode_metrics = _run_single_episode_evaluation(
             agent,
@@ -203,9 +205,7 @@ def _run_single_episode_evaluation(
 
     # Capture and save the last frame
     last_frame = env.render()  # type: ignore
-    last_frame_path = os.path.join(
-        output_dir, f"episode_{eval_episode}_last_frame.png"
-    )
+    last_frame_path = os.path.join(output_dir, f"episode_{eval_episode}_last_frame.png")
     plt.imsave(last_frame_path, last_frame)  # type: ignore
     logging.info(f"Saved last frame to {last_frame_path}")
 

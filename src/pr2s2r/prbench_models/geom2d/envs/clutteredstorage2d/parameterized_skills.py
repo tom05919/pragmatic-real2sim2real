@@ -91,11 +91,7 @@ class GroundPickBlockNotOnShelfController(Geom2dRobotController):
             )
 
             # Relative SE2 pose w.r.t the grasp frame
-            custom_dx = (
-                block_width / 2
-                + arm_length
-                + gripper_width
-            )
+            custom_dx = block_width / 2 + arm_length + gripper_width
             custom_dx *= -1 if grasp_ratio < 0 else 1  # Right or left side grasp
             # Custom dy is always positive.
             custom_dy = abs(grasp_ratio) * block_height
@@ -114,11 +110,7 @@ class GroundPickBlockNotOnShelfController(Geom2dRobotController):
             eff_ratio = abs(grasp_ratio) - 1.0
             face_sign = 1 if grasp_ratio > 0 else -1
 
-            custom_dy = (
-                block_height / 2
-                + arm_length
-                + gripper_width
-            )
+            custom_dy = block_height / 2 + arm_length + gripper_width
             custom_dy *= face_sign
 
             custom_dx = eff_ratio * block_width
@@ -245,7 +237,7 @@ class GroundPlaceBlockOnShelfController(Geom2dRobotController):
             else:
                 # Grasped Bottom (-Y) -> Rotate 0 to put Bottom down
                 target_theta = 0.0
-            
+
             # For vertical placement, World Height = Block Height
             y_dim = block_height
         else:
@@ -256,7 +248,7 @@ class GroundPlaceBlockOnShelfController(Geom2dRobotController):
             else:
                 # Right side grasp (+X) -> Rotate -90 to put Right down
                 target_theta = -np.pi / 2
-            
+
             # For horizontal placement, World Height = Block Width
             y_dim = block_width
 
@@ -268,7 +260,7 @@ class GroundPlaceBlockOnShelfController(Geom2dRobotController):
         block_desired_center = SE2Pose(
             block_desired_x_center, block_desired_y_center, target_theta
         )
-        
+
         gripper_final_desired_pose = (
             block_desired_center
             * SE2Pose(-block_width / 2, -block_height / 2, 0.0)
