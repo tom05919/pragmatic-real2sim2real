@@ -51,11 +51,11 @@ class GroundPickBlockNotOnShelfController(Geom2dRobotController):
         self, x: ObjectCentricState, rng: np.random.Generator
     ) -> tuple[float, float]:
         # Sample grasp ratio on the height of the block
-        # <0.0: custom frame dx/dy < 0
-        # >0.0: custom frame dx/dy > 0
+        # [-1.0, 1.0]: X-axis grasp (Long sides)
+        # [-2.0, -1.0) U (1.0, 2.0]: Y-axis grasp (Short sides)
         while True:
-            grasp_ratio = rng.uniform(-1.0, 1.0)
-            if grasp_ratio != 0.0:
+            grasp_ratio = rng.uniform(-2.0, 2.0)
+            if grasp_ratio != 0.0 and abs(grasp_ratio) != 1.0:
                 break
         max_arm_length = x.get(self._robot, "arm_length")
         min_arm_length = (
@@ -80,25 +80,44 @@ class GroundPickBlockNotOnShelfController(Geom2dRobotController):
         block_x = state.get(self._block, "x")
         block_y = state.get(self._block, "y")
         block_theta = state.get(self._block, "theta")
-        rel_point_dx = state.get(self._block, "width") / 2
-        rel_point = SE2Pose(block_x, block_y, block_theta) * SE2Pose(
-            rel_point_dx, 0.0, 0.0
-        )
+        block_width = state.get(self._block, "width")
+        block_height = state.get(self._block, "height")
+        gripper_width = state.get(self._robot, "gripper_width")
 
-        # Relative SE2 pose w.r.t the grasp frame
-        custom_dx = (
-            state.get(self._block, "width") / 2
-            + arm_length
-            + state.get(self._robot, "gripper_width")
-        )
-        custom_dx *= -1 if grasp_ratio < 0 else 1  # Right or left side grasp
-        # Custom dy is always positive.
-        custom_dy = abs(grasp_ratio) * state.get(self._block, "height")
-        custom_dtheta = 0.0 if grasp_ratio < 0 else np.pi
-        custom_pose = SE2Pose(custom_dx, custom_dy, custom_dtheta)
+        if abs(grasp_ratio) <= 1.0:
+            rel_point_dx = block_width / 2
+            rel_point = SE2Pose(block_x, block_y, block_theta) * SE2Pose(
+                rel_point_dx, 0.0, 0.0
+            )
 
-        target_se2_pose = rel_point * custom_pose
-        return target_se2_pose
+            # Relative SE2 pose w.r.t the grasp frame
+            custom_dx = block_width / 2 + arm_length + gripper_width
+            custom_dx *= -1 if grasp_ratio < 0 else 1  # Right or left side grasp
+            # Custom dy is always positive.
+            custom_dy = abs(grasp_ratio) * block_height
+            custom_dtheta = 0.0 if grasp_ratio < 0 else np.pi
+            custom_pose = SE2Pose(custom_dx, custom_dy, custom_dtheta)
+
+            target_se2_pose = rel_point * custom_pose
+            return target_se2_pose
+        else:
+            # Y-axis grasp (Short sides)
+            rel_point_dy = block_height / 2
+            rel_point = SE2Pose(block_x, block_y, block_theta) * SE2Pose(
+                0.0, rel_point_dy, 0.0
+            )
+
+            eff_ratio = abs(grasp_ratio) - 1.0
+            face_sign = 1 if grasp_ratio > 0 else -1
+
+            custom_dy = block_height / 2 + arm_length + gripper_width
+            custom_dy *= face_sign
+
+            custom_dx = eff_ratio * block_width
+            custom_dtheta = -np.pi / 2 if face_sign > 0 else np.pi / 2
+
+            custom_pose = SE2Pose(custom_dx, custom_dy, custom_dtheta)
+            return rel_point * custom_pose
 
     def _generate_waypoints(
         self, state: ObjectCentricState
@@ -205,28 +224,43 @@ class GroundPlaceBlockOnShelfController(Geom2dRobotController):
         x_min = min(x_min, x_max)
         x_max = max(x_min, x_max)
         block_desired_x_center = x_min + (x_max - x_min) * self._current_params[0]
-        # y is confined to inside the shelf height (no collision)
-        y_min = min(shelf_y + block_width / 2, shelf_y + shelf_height - block_width / 2)
-        y_max = max(shelf_y + block_width / 2, shelf_y + shelf_height - block_width / 2)
-        block_desired_y_center = y_min + (y_max - y_min) * self._current_params[1]
-        # Note: The desired orientation depends on how is the blocked grasped.
-        # If grasping from the left side, the block should be placed with
-        # theta = np.pi / 2
-        # If grasping from the right side, the block should be placed with
-        # theta = -np.pi / 2
+        # Determine orientation based on grasp
         gripper_x, gripper_y = get_tool_tip_position(state, self._robot)
         gripper_frame = SE2Pose(gripper_x, gripper_y, block_theta)
         relative_frame = block_curr_center.inverse * gripper_frame
-        if relative_frame.x < 0:
-            # Left side grasp
-            block_desired_center = SE2Pose(
-                block_desired_x_center, block_desired_y_center, np.pi / 2
-            )
+
+        if abs(relative_frame.y) > abs(relative_frame.x):
+            # Y-axis grasp (Top/Bottom) -> Vertical Placement
+            if relative_frame.y > 0:
+                # Grasped Top (+Y) -> Rotate 180 to put Top down
+                target_theta = np.pi
+            else:
+                # Grasped Bottom (-Y) -> Rotate 0 to put Bottom down
+                target_theta = 0.0
+
+            # For vertical placement, World Height = Block Height
+            y_dim = block_height
         else:
-            # Right side grasp
-            block_desired_center = SE2Pose(
-                block_desired_x_center, block_desired_y_center, -np.pi / 2
-            )
+            # X-axis grasp (Left/Right) -> Horizontal Placement
+            if relative_frame.x < 0:
+                # Left side grasp (-X) -> Rotate 90 to put Left down
+                target_theta = np.pi / 2
+            else:
+                # Right side grasp (+X) -> Rotate -90 to put Right down
+                target_theta = -np.pi / 2
+
+            # For horizontal placement, World Height = Block Width
+            y_dim = block_width
+
+        # Update Y bounds based on orientation dimensions
+        y_min = min(shelf_y + y_dim / 2, shelf_y + shelf_height - y_dim / 2)
+        y_max = max(shelf_y + y_dim / 2, shelf_y + shelf_height - y_dim / 2)
+        block_desired_y_center = y_min + (y_max - y_min) * self._current_params[1]
+
+        block_desired_center = SE2Pose(
+            block_desired_x_center, block_desired_y_center, target_theta
+        )
+
         gripper_final_desired_pose = (
             block_desired_center
             * SE2Pose(-block_width / 2, -block_height / 2, 0.0)
@@ -440,8 +474,8 @@ def create_lifted_controllers(
 
     # Define params_space for each controller type
     pick_block_not_on_shelf_params_space = Box(
-        low=np.array([-1.0, 0.0]),
-        high=np.array([1.0, 1.0]),
+        low=np.array([-2.0, 0.0]),
+        high=np.array([2.0, 1.0]),
         dtype=np.float32,
     )
     pick_block_on_shelf_params_space = Box(

@@ -119,12 +119,16 @@ class ClutteredStorage2DEnvConfig(Geom2DRobotEnvConfig, metaclass=FinalConfigMet
 
     def get_shelf_width(self, num_init_shelf_blocks: int) -> float:
         """Calculate the shelf width as a function of number of blocks."""
-        assert self.shelf_width <= self.world_max_x - self.world_min_x
+        # Ensure capacity for at least num_init + 1 blocks
+        effective_num_blocks = num_init_shelf_blocks + 2
+        shelf_width = (
+            max(self.target_block_shape) + self.shelf_width_pad
+        ) * effective_num_blocks
+
+        assert shelf_width <= self.world_max_x - self.world_min_x
         # Make sure that vertical stacking is possible.
-        assert (
-            self.shelf_width > (num_init_shelf_blocks + 1) * self.target_block_shape[1]
-        )
-        return self.shelf_width
+        assert shelf_width > (num_init_shelf_blocks + 1) * self.target_block_shape[1]
+        return shelf_width
 
     def get_shelf_init_pose_bounds(
         self, num_init_shelf_blocks: int
@@ -148,7 +152,8 @@ class ClutteredStorage2DEnvConfig(Geom2DRobotEnvConfig, metaclass=FinalConfigMet
         xs = np.linspace(min_x, max_x, num=num_init_shelf_blocks, endpoint=True)
         # NOTE: there is an implicit assumption here that the shelf is not too
         # deep for the robot to reach in and grab the objects.
-        y = shelf_pose.y + 2 * self.target_block_shape[1]
+        # Place roughly in the middle of the shelf vertically
+        y = shelf_pose.y + self.shelf_height / 2
         return [(x, y) for x in xs]
 
 
@@ -163,36 +168,54 @@ class ObjectCentricClutteredStorage2DEnv(
 
     def __init__(
         self,
-        num_blocks: int = 3,
+        num_blocks: int | None = None,
         config: ClutteredStorage2DEnvConfig = ClutteredStorage2DEnvConfig(),
         target_block_shape: tuple[float, float] | None = None,
         occupied_percentage: float | None = None,
+        blocker_width: float | None = None,
+        blocker_height: float | None = None,
+        blocker_type: str | None = None,
         **kwargs,
     ) -> None:
         # Create custom config if parameters are provided
-        if target_block_shape is not None or occupied_percentage is not None:
-            config_updates: dict = {}
-            if target_block_shape is not None:
-                config_updates["target_block_shape"] = target_block_shape
-            if occupied_percentage is not None:
-                if self._simplification_eligible(config, occupied_percentage):
-                    config_updates["occupied_percentage"] = occupied_percentage
-                    config_updates["blocker_type"] = "rectangle"
-                    config_updates["blocker_width"] = (
-                        config.shelf_width * occupied_percentage
-                    )
-                    config_updates["blocker_height"] = (
-                        config.shelf_height * occupied_percentage
-                    )
-                else:
-                    config_updates["occupied_percentage"] = occupied_percentage
-                    config_updates["blocker_type"] = "lobject"
-                    config_updates["blocker_width"] = (
-                        config.shelf_width * occupied_percentage
-                    )
-                    config_updates["blocker_height"] = (
-                        config.shelf_height * occupied_percentage
-                    )
+
+        actual_shelf_width = config.get_shelf_width(num_blocks // 2)
+
+        eff_blocker_width = actual_shelf_width * config.occupied_percentage
+        eff_blocker_height = config.shelf_height * config.occupied_percentage
+
+        if occupied_percentage is not None:
+            eff_blocker_width = actual_shelf_width * occupied_percentage
+            eff_blocker_height = config.shelf_height * occupied_percentage
+
+        if blocker_width is not None:
+            eff_blocker_width = blocker_width
+        if blocker_height is not None:
+            eff_blocker_height = blocker_height
+
+        # Determine effective type
+        eff_blocker_type = config.blocker_type
+        if blocker_type is not None:
+            eff_blocker_type = blocker_type
+        elif self._simplification_eligible(
+            config, eff_blocker_width, eff_blocker_height
+        ):
+            eff_blocker_type = "rectangle"
+        else:
+            eff_blocker_type = "lobject"
+
+        # Apply updates
+        config_updates: dict = {}
+        if target_block_shape is not None:
+            config_updates["target_block_shape"] = target_block_shape
+        if occupied_percentage is not None:
+            config_updates["occupied_percentage"] = occupied_percentage
+
+        config_updates["blocker_width"] = eff_blocker_width
+        config_updates["blocker_height"] = eff_blocker_height
+        config_updates["blocker_type"] = eff_blocker_type
+
+        if config_updates:
             config = replace(config, **config_updates)  # type: ignore[misc]
 
         super().__init__(config, **kwargs)
@@ -203,11 +226,10 @@ class ObjectCentricClutteredStorage2DEnv(
     @staticmethod
     def _simplification_eligible(
         config: ClutteredStorage2DEnvConfig,
-        occupied_percentage: float,
+        blocker_width: float,
+        blocker_height: float,
     ) -> bool:
         """Check if simplification is eligible based on blocker and block dimensions."""
-        blocker_width = config.shelf_width * occupied_percentage
-        blocker_height = config.shelf_height * occupied_percentage
         block_width = config.target_block_shape[0]  # shorter side
         block_height = config.target_block_shape[1]  # longer side
 
